@@ -1,0 +1,22 @@
+// ==UserScript==
+// @name         image zip downloader
+// @namespace    http://tampermonkey.net/
+// @version      0.1
+// @description  downloads images from misc image hosts as zip, running local, private and secure
+// @homepage     https://github.com/sodabrain/imagezipdl
+// @author       Soda Brain
+// @match        *://*.pixhost.to/*
+// @match        *://*.imagebam.com/*
+// @match        *://*.imgbox.com/*
+// @grant        GM.xmlHttpRequest
+// @grant        unsafeWindow
+// @connect      acidimg.co
+// @connect      ibb.co
+// @connect      imagebam.com
+// @connect      imgbox.com
+// @connect      imx.to
+// @connect      pixhost.to
+// @connect      vipr.im
+// ==/UserScript==
+
+
