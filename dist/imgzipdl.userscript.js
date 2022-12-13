@@ -10,6 +10,13 @@
 // @match        *://*.imgbox.com/*
 // @grant        GM.xmlHttpRequest
 // @grant        unsafeWindow
+// @connect      acidimg.co
+// @connect      ibb.co
+// @connect      imagebam.com
+// @connect      imgbox.com
+// @connect      imx.to
+// @connect      pixhost.to
+// @connect      vipr.im
 // ==/UserScript==
 
 
@@ -8903,11 +8910,6 @@
 	    }
 
 
-	    constructor() {
-	        this.zipWriter = new ZipWriter(new BlobWriter("application/zip"), {bufferedWrite: true});
-
-	    }
-
 	    async downloadWhenReady() {
 	        if (this.urls.length > 0) {
 	            this.fetch();
@@ -8932,7 +8934,7 @@
 	    }
 
 	    zipFromUrls(urls) {
-
+	        this.zipWriter = new ZipWriter(new BlobWriter("application/zip"), {bufferedWrite: true});
 	        this.urls = urls;//urls.slice(0, 5);
 	        this.urlCount = this.urls.length;
 	        this.filesToGo = urls.length;
@@ -9166,14 +9168,24 @@
 
 	}
 
-	class ImxTo extends Abstract{
+	class ImxTo extends Abstract {
 	    postMatchFragment = 'https://imx.to';
 
 	    getImageURIs(node, callback) {
-	        callback(Array.from(node.querySelectorAll('a[href*="imx.to/i"] img')).map((node, i) => [
-	                node.getAttribute('src').replace('/t/', '/i/'),
-	                node.getAttribute('alt') || `file_${this.zeroPad(i)}.jpg`
-	            ]
+	        callback(Array.from(node.querySelectorAll('a[href*="imx.to"] img')).map((node, i) => {
+
+	                let url = node.getAttribute('src').replace('/t/', '/i/');
+	                if (/upload\/small/.test(url)) {
+	                    url = url.replace('/upload/small/', '/i/');
+	                    url = url.replace('//', '//i001.');
+	                }
+
+
+	                return [
+	                    url,
+	                    node.getAttribute('alt') || `file_${this.zeroPad(i)}.jpg`
+	                ]
+	            }
 	        ));
 	    }
 
@@ -9317,8 +9329,15 @@
                   padding-bottom:4px;
                   box-sizing: border-box;
                   z-index:9999999;
+                  display: none;
                 }
+                
+                .izd-imagehost #izd-backdrop{
+                    display:block;
+                }
+                
                 #izd-backdrop.in-progress{
+                    display:block;
                     top:0;
                     left:0;
                     right:0;
@@ -9386,11 +9405,14 @@
                     padding:10px;
                     font-size:200%;
                     text-align: center;
-                    color:#fff;                
+                    color:#fff;
+                    display:flex;
+                    justify-content: space-around;
                 }
                 
                 #izd-controls a{
                     display:none;
+                    color:#fff;
                 }
                 
                 .done #izd-controls a{
@@ -9413,6 +9435,7 @@
                     <div id="izd-controls">
                         <span>wait&hellip;</span>
                         <a href="#" id="izd-downloadbutton">Download ZIP</a>
+                        <a href="#" id="izd-closebutton">Close window</a>
                     </div>
                 </div>
             </div>
@@ -9420,7 +9443,16 @@
         `);
 
 	        document.querySelector('#izd-notice a').addEventListener('click', e => {
+	            e.preventDefault();
 	            this.commenceDownload(document);
+	        });
+	        document.querySelector('#izd-closebutton').addEventListener('click', e => {
+	            e.preventDefault();
+	            document.getElementById('izd-progress-box').classList.remove('done');
+	            document.getElementById('izd-backdrop').classList.remove('in-progress');
+	            document.querySelector('#izd-progress-log > div').innerHTML = '';
+	            document.querySelector('#izd-warnings').innerHTML = '';
+
 	        });
 
 	        window.addEventListener('izd:message', e => {
@@ -9428,6 +9460,7 @@
 	        });
 
 	        window.addEventListener('izd:warn', e => {
+	            this.warnings.push(e.detail.message);
 	            this.renderWarnings();
 	        });
 
